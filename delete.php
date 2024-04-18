@@ -1,42 +1,38 @@
 <?php
+require_once "config.php";
+
 // Process delete operation after confirmation
-if(isset($_POST["id"]) && !empty($_POST["id"])){
-    // Include config file
-    require_once "config.php";
-    
-    // Prepare a delete statement
-    $sql = "DELETE FROM employees WHERE id = :id";
-    
-    if($stmt = $pdo->prepare($sql)){
-        // Bind variables to the prepared statement as parameters
-        $stmt->bindParam(":id", $param_id);
-        
-        // Set parameters
-        $param_id = trim($_POST["id"]);
-        
-        // Attempt to execute the prepared statement
-        if($stmt->execute()){
-            // Records deleted successfully. Redirect to landing page
-            header("location: index.php");
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    if (isset($_POST["id"]) && !empty($_POST["id"])) {
+        $id = trim($_POST["id"]);
+
+        $sql = "DELETE FROM products WHERE product_id = :id";
+
+        try {
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(":id", $id);
+            $stmt->execute();
+
+            header("Location: index.php");
             exit();
-        } else{
-            echo "Oops! Something went wrong. Please try again later.";
+        } catch (PDOException $e) {
+            echo "Error: " . $e->getMessage();
+            exit();
         }
-    }
-     
-    // Close statement
-    unset($stmt);
-    
-    // Close connection
-    unset($pdo);
-} else{
-    // Check existence of id parameter
-    if(empty(trim($_GET["id"]))){
-        // URL doesn't contain id parameter. Redirect to error page
-        header("location: error.php");
+    } else {
+        header("Location: error.php");
         exit();
     }
 }
+
+// Check existence of id parameter
+if (empty($_GET["id"])) {
+    // URL doesn't contain id parameter. Redirect to error page
+    header("Location: error.php");
+    exit();
+}
+
+$id = trim($_GET["id"]);
 ?>
 
 <!DOCTYPE html>
@@ -60,8 +56,8 @@ if(isset($_POST["id"]) && !empty($_POST["id"])){
                     <h2 class="mt-5 mb-3">Delete Record</h2>
                     <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
                         <div class="alert alert-danger">
-                            <input type="hidden" name="id" value="<?php echo trim($_GET["id"]); ?>"/>
-                            <p>Are you sure you want to delete this employee record?</p>
+                            <input type="hidden" name="id" value="<?php echo $id; ?>"/>
+                            <p>Are you sure you want to delete this product record?</p>
                             <p>
                                 <input type="submit" value="Yes" class="btn btn-danger">
                                 <a href="index.php" class="btn btn-secondary ml-2">No</a>
